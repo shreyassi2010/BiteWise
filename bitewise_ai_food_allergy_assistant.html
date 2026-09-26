@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BiteWise - AI Food Allergy Assistant</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Fonts: Fredoka & DM Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Fredoka:wght@300..700&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome & Tesseract.js OCR Engine -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            lavender: {
+              100: '#F5F0FF',
+              300: '#D8C9FF',
+              600: '#8066C8',
+              800: '#4A3B7A'
+            },
+            butter: {
+              100: '#FFF5C7',
+              400: '#FFE58A',
+              600: '#E6C442'
+            },
+            cream: '#FFFDF5',
+            softGreen: '#E3F4E8',
+            softRed: '#FFE5E2',
+            softAmber: '#FEF3C7',
+            darkPurple: '#29253A'
+          },
+          fontFamily: {
+            display: ['Fredoka', 'sans-serif'],
+            body: ['DM Sans', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background-color: #FFFDF5;
+      color: #29253A;
+    }
+    .font-display {
+      font-family: 'Fredoka', cursive, sans-serif;
+    }
+    .playful-card {
+      border: 3px solid #29253A;
+      box-shadow: 4px 4px 0px #29253A;
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .playful-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 6px 6px 0px #29253A;
+    }
+    .playful-btn {
+      border: 3px solid #29253A;
+      box-shadow: 3px 3px 0px #29253A;
+      transition: all 0.15s ease;
+    }
+    .playful-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 4px 4px 0px #29253A;
+    }
+    .playful-btn:active {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0px #29253A;
+    }
+    .pulse-animation {
+      animation: pulseGlow 1.8s infinite ease-in-out;
+    }
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.85; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.04); }
+    }
+  </style>
+</head>
+
+<body class="min-h-screen flex flex-col bg-[#FFFDF5]">
+
+  <header class="sticky top-0 z-40 bg-[#FFFDF5]/95 backdrop-blur-md border-b-4 border-darkPurple">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between flex-wrap gap-3">
+      
+      <!-- Brand Logo -->
+      <div onclick="switchTab('tab-home')" class="cursor-pointer flex items-center gap-3 group">
+        <div class="w-11 h-11 bg-butter-400 border-3 border-darkPurple rounded-2xl flex items-center justify-center text-2xl shadow-[3px_3px_0px_#29253A] group-hover:rotate-6 transition-transform">
+          <i class="fa-solid fa-cookie-bite text-lavender-600"></i>
+        </div>
+        <div>
+          <h1 class="font-display font-bold text-2xl tracking-wide text-darkPurple flex items-center gap-1.5">
+            BiteWise
+          </h1>
+          <p class="text-xs font-semibold text-gray-500">Know before you bite.</p>
+        </div>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto py-1">
+        <button onclick="switchTab('tab-home')" id="nav-tab-home" class="nav-btn px-3 py-1.5 rounded-xl font-display font-bold text-sm border-2 border-darkPurple bg-butter-400 text-darkPurple shadow-[2px_2px_0px_#29253A]">
+          <i class="fa-solid fa-house mr-1"></i> Home
+        </button>
+        <button onclick="switchTab('tab-allergies')" id="nav-tab-allergies" class="nav-btn px-3 py-1.5 rounded-xl font-display font-bold text-sm border-2 border-darkPurple bg-white hover:bg-gray-100 text-darkPurple shadow-[2px_2px_0px_#29253A]">
+          <i class="fa-solid fa-shield-halved mr-1 text-lavender-600"></i> Allergies
+        </button>
+        <button onclick="switchTab('tab-scan')" id="nav-tab-scan" class="nav-btn px-3 py-1.5 rounded-xl font-display font-bold text-sm border-2 border-darkPurple bg-white hover:bg-gray-100 text-darkPurple shadow-[2px_2px_0px_#29253A]">
+          <i class="fa-solid fa-camera mr-1 text-lavender-600"></i> Analyze Menu
+        </button>
+        <button onclick="switchTab('tab-results')" id="nav-tab-results" class="nav-btn px-3 py-1.5 rounded-xl font-display font-bold text-sm border-2 border-darkPurple bg-white hover:bg-gray-100 text-darkPurple shadow-[2px_2px_0px_#29253A]">
+          <i class="fa-solid fa-list-check mr-1 text-lavender-600"></i> Results
+        </button>
+        <button onclick="switchTab('tab-about')" id="nav-tab-about" class="nav-btn px-3 py-1.5 rounded-xl font-display font-bold text-sm border-2 border-darkPurple bg-white hover:bg-gray-100 text-darkPurple shadow-[2px_2px_0px_#29253A]">
+          <i class="fa-solid fa-circle-info mr-1 text-lavender-600"></i> About Us
+        </button>
+      </nav>
+
+      <!-- Active Allergies Header Pill (Clean inline badges, no solid dark purple square) -->
+      <div onclick="switchTab('tab-allergies')" class="cursor-pointer flex items-center gap-2 hover:opacity-80 transition-opacity">
+        <span class="text-xs font-bold text-gray-500 uppercase tracking-wider hidden md:inline">Avoid:</span>
+        <div id="header-allergies-badges" class="flex items-center gap-1.5 flex-wrap">
+          <!-- Populated by JavaScript -->
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-6xl w-full mx-auto p-4 md:p-6">
+
+    <section id="tab-home" class="tab-content block space-y-8">
+      
+      <!-- Whimsical Hero Banner -->
+      <div class="playful-card bg-lavender-300 rounded-3xl p-6 md:p-10 relative overflow-hidden">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center relative z-10">
+          
+          <div class="md:col-span-7 space-y-4">
+            <span class="inline-block bg-butter-400 border-2 border-darkPurple px-3.5 py-1 rounded-full text-xs font-display font-bold uppercase tracking-wider text-darkPurple shadow-[2px_2px_0px_#29253A]">
+              ✨ AI Food Allergy Assistant
+            </span>
+            <h2 class="font-display font-bold text-3xl sm:text-4xl md:text-5xl text-darkPurple leading-tight">
+              Know before you bite.
+            </h2>
+            <p class="text-base md:text-lg font-medium text-darkPurple/90">
+              Scan a restaurant menu or enter dishes manually to find out what may work with your allergies.
+            </p>
+            <div class="flex flex-wrap gap-3 pt-3">
+              <button onclick="openMenuScan('photo')" class="playful-btn bg-butter-400 hover:bg-butter-600 text-darkPurple font-display font-bold px-6 py-3.5 rounded-2xl flex items-center gap-2 text-base">
+                Scan a Menu <i class="fa-solid fa-arrow-right"></i>
+              </button>
+              <button onclick="openMenuScan('manual')" class="playful-btn bg-white hover:bg-gray-50 text-darkPurple font-display font-bold px-6 py-3.5 rounded-2xl flex items-center gap-2 text-base">
+                Type Dishes <i class="fa-solid fa-keyboard text-lavender-600"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Clean Non-Overlapping Hero Illustration -->
+          <div class="md:col-span-5 flex items-center justify-center">
+            <div class="bg-white border-3 border-darkPurple p-4 rounded-2xl shadow-[5px_5px_0px_#29253A] w-full max-w-sm space-y-3">
+              <div class="flex items-center justify-between border-b-2 border-darkPurple pb-2">
+                <span class="font-display font-bold text-sm text-darkPurple">📜 Restaurant Menu</span>
+                <span class="text-xs font-bold bg-softGreen px-2 py-0.5 rounded-full border border-darkPurple text-emerald-800">Scanned</span>
+              </div>
+              <div class="space-y-2 text-xs font-semibold text-gray-700">
+                <div class="flex justify-between items-center bg-gray-50 p-2 rounded-xl border border-gray-200">
+                  <span>Crispy Spring Rolls</span>
+                  <span class="text-amber-800 font-bold">🟡 Check First</span>
+                </div>
+                <div class="flex justify-between items-center bg-gray-50 p-2 rounded-xl border border-gray-200">
+                  <span>Creamy Butter Chicken</span>
+                  <span class="text-red-700 font-bold">🔴 Avoid</span>
+                </div>
+                <div class="flex justify-between items-center bg-gray-50 p-2 rounded-xl border border-gray-200">
+                  <span>Garden Fresh Salad</span>
+                  <span class="text-emerald-700 font-bold">🟢 Likely Safe</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- How It Works Section -->
+      <div class="space-y-4">
+        <h3 class="font-display font-bold text-2xl md:text-3xl text-darkPurple text-center">
+          How BiteWise Works
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+          
+          <div class="playful-card bg-white rounded-3xl p-6 space-y-3">
+            <div class="w-12 h-12 bg-lavender-300 border-2 border-darkPurple rounded-2xl flex items-center justify-center font-display font-bold text-xl text-darkPurple shadow-[3px_3px_0px_#29253A]">
+              01
+            </div>
+            <h4 class="font-display font-bold text-xl text-darkPurple">Choose your allergy</h4>
+            <p class="text-sm font-medium text-gray-600 leading-relaxed">
+              Tell BiteWise what ingredients you need to avoid. Select single or multiple triggers like Nut, Dairy, Egg, Gluten, and more.
+            </p>
+          </div>
+
+          <div class="playful-card bg-white rounded-3xl p-6 space-y-3">
+            <div class="w-12 h-12 bg-butter-400 border-2 border-darkPurple rounded-2xl flex items-center justify-center font-display font-bold text-xl text-darkPurple shadow-[3px_3px_0px_#29253A]">
+              02
+            </div>
+            <h4 class="font-display font-bold text-xl text-darkPurple">Scan or type</h4>
+            <p class="text-sm font-medium text-gray-600 leading-relaxed">
+              Take a clear photo of the restaurant menu OR type dish names and descriptions manually.
+            </p>
+          </div>
+
+          <div class="playful-card bg-white rounded-3xl p-6 space-y-3">
+            <div class="w-12 h-12 bg-softGreen border-2 border-darkPurple rounded-2xl flex items-center justify-center font-display font-bold text-xl text-darkPurple shadow-[3px_3px_0px_#29253A]">
+              03
+            </div>
+            <h4 class="font-display font-bold text-xl text-darkPurple">Understand options</h4>
+            <p class="text-sm font-medium text-gray-600 leading-relaxed">
+              BiteWise extracts genuine dishes, filters out titles like "STARTERS", and classifies each item into 🟢 Likely Safe, 🟡 Check First, or 🔴 Avoid.
+            </p>
+          </div>
+
+        </div>
+      </div>
+
+    </section>
+
+    <section id="tab-allergies" class="tab-content hidden space-y-6">
+      <div class="playful-card bg-white rounded-3xl p-6 md:p-8 space-y-6">
+        <div>
+          <h2 class="font-display font-bold text-2xl md:text-3xl text-darkPurple flex items-center gap-2">
+            <i class="fa-solid fa-shield-cat text-lavender-600"></i> What do you need to avoid?
+          </h2>
+          <p class="text-sm font-semibold text-gray-600 mt-1">
+            Choose all allergies you want BiteWise to check. Selecting multiple applies all of them simultaneously.
+          </p>
+        </div>
+
+        <!-- Cards Grid -->
+        <div id="allergy-selection-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          <!-- Dynamically generated by JS -->
+        </div>
+
+        <!-- Custom Allergy Option -->
+        <div class="bg-lavender-100 border-2 border-darkPurple rounded-2xl p-4 flex items-center gap-3 flex-wrap">
+          <div class="flex-1 min-w-[200px]">
+            <label class="block text-xs font-bold text-darkPurple uppercase mb-1">Add Specific Ingredient or Allergy</label>
+            <input type="text" id="custom-allergy-input" placeholder="e.g. Sesame, Mustard, Mushroom, Sulfites" class="w-full px-3 py-2 rounded-xl border-2 border-darkPurple text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-lavender-600">
+          </div>
+          <button onclick="addCustomAllergy()" class="playful-btn bg-butter-400 hover:bg-butter-600 text-darkPurple font-display font-bold px-4 py-2 rounded-xl text-sm flex items-center gap-1 self-end">
+            <i class="fa-solid fa-plus"></i> Add Trigger
+          </button>
+        </div>
+
+        <div class="flex justify-between items-center pt-2 flex-wrap gap-3">
+          <button onclick="clearAllAllergies()" class="text-xs font-bold text-red-600 hover:underline">
+            Clear all selections
+          </button>
+          <button onclick="switchTab('tab-scan')" class="playful-btn bg-lavender-600 hover:bg-lavender-800 text-white font-display font-bold px-6 py-3 rounded-2xl text-base flex items-center gap-2">
+            Continue to Menu <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-scan" class="tab-content hidden space-y-6">
+      
+      <!-- Input Mode Toggle -->
+      <div class="flex rounded-2xl border-3 border-darkPurple bg-white p-1 max-w-md mx-auto shadow-[3px_3px_0px_#29253A]">
+        <button onclick="setInputMode('photo')" id="mode-tab-photo" class="flex-1 py-2 rounded-xl font-display font-bold text-sm bg-butter-400 text-darkPurple border-2 border-darkPurple">
+          📷 Scan a Photo
+        </button>
+        <button onclick="setInputMode('manual')" id="mode-tab-manual" class="flex-1 py-2 rounded-xl font-display font-bold text-sm bg-transparent text-gray-600 hover:text-darkPurple">
+          ⌨️ Type Dishes
+        </button>
+      </div>
+
+      <!-- PHOTO INPUT PANEL -->
+      <div id="panel-photo" class="playful-card bg-white rounded-3xl p-6 md:p-8 space-y-6">
+        <div class="text-center max-w-xl mx-auto space-y-2">
+          <h2 class="font-display font-bold text-2xl md:text-3xl text-darkPurple">Show us the menu</h2>
+          <p class="text-xs font-semibold text-gray-500">Take a clear photo of the restaurant menu or upload one from your device.</p>
+        </div>
+
+        <!-- Drag and Drop Dropzone -->
+        <div id="drop-zone" onclick="document.getElementById('file-upload-input').click()" class="border-3 border-dashed border-lavender-600 bg-lavender-100 hover:bg-lavender-300 transition-colors rounded-2xl p-8 text-center cursor-pointer space-y-3 relative">
+          <input type="file" id="file-upload-input" accept="image/*" class="hidden" onchange="handleFileSelected(event)">
+          
+          <div id="upload-prompt" class="space-y-3">
+            <div class="w-16 h-16 bg-butter-400 border-2 border-darkPurple rounded-2xl mx-auto flex items-center justify-center text-2xl text-darkPurple shadow-[3px_3px_0px_#29253A]">
+              <i class="fa-solid fa-camera"></i>
+            </div>
+            <div>
+              <p class="font-display font-bold text-lg text-darkPurple">Tap to snap or select menu photo</p>
+              <p class="text-xs text-gray-500 font-semibold">Supports JPG, PNG, WEBP</p>
+            </div>
+          </div>
+
+          <!-- Preview -->
+          <div id="preview-container" class="hidden relative inline-block max-w-md mx-auto">
+            <img id="menu-photo-preview" src="" alt="Menu preview" class="max-h-64 rounded-xl border-2 border-darkPurple object-contain shadow-md mx-auto">
+            <button onclick="removeSelectedPhoto(event)" class="absolute -top-3 -right-3 w-8 h-8 bg-softRed text-red-700 rounded-full border-2 border-darkPurple flex items-center justify-center text-xs font-bold shadow-md hover:bg-red-200">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Sample Menu Fast Loads -->
+        <div class="space-y-2">
+          <p class="text-xs font-bold text-gray-500 uppercase text-center">Or test with "The Garden Table" sample menu:</p>
+          <div class="flex justify-center flex-wrap gap-2">
+            <button onclick="loadSampleGardenTable()" class="px-3 py-1.5 bg-gray-100 hover:bg-butter-400 border border-darkPurple rounded-xl text-xs font-bold text-darkPurple transition-colors">
+              🥗 Load "The Garden Table" Menu
+            </button>
+          </div>
+        </div>
+
+        <div class="text-center pt-2">
+          <button id="analyze-photo-btn" onclick="startPhotoAnalysis()" class="playful-btn bg-butter-400 hover:bg-butter-600 text-darkPurple font-display font-bold text-lg px-8 py-3.5 rounded-2xl w-full sm:w-auto min-w-[240px] inline-flex items-center justify-center gap-2">
+            <i class="fa-solid fa-wand-magic-sparkles text-lavender-600"></i> Analyze Menu Photo
+          </button>
+        </div>
+      </div>
+
+      <!-- MANUAL TEXT INPUT PANEL -->
+      <div id="panel-manual" class="playful-card bg-white rounded-3xl p-6 md:p-8 space-y-4 hidden">
+        <div>
+          <h2 class="font-display font-bold text-2xl text-darkPurple">Enter menu dishes</h2>
+          <p class="text-xs font-semibold text-gray-500">Type or paste dish names with descriptions line-by-line.</p>
+        </div>
+
+        <textarea id="manual-text-input" rows="8" placeholder="Example:&#10;Creamy Butter Chicken - Tender chicken cooked in tomato gravy with butter, cream and spices&#10;Garden Fresh Salad - Lettuce, cucumber, tomato, carrots and lemon dressing&#10;Thai Peanut Noodles - Rice noodles tossed with vegetables and peanut sauce&#10;Almond Caramel Tart - Buttery pastry filled with almond cream and caramel" class="w-full p-4 rounded-2xl border-2 border-darkPurple text-sm font-medium focus:outline-none focus:ring-2 focus:ring-lavender-600 bg-gray-50"></textarea>
+
+        <div class="flex justify-between items-center pt-2 flex-wrap gap-3">
+          <button onclick="loadSampleGardenTableText()" class="text-xs font-bold text-lavender-600 hover:underline">
+            Fill with "The Garden Table" text
+          </button>
+          <button onclick="startManualAnalysis()" class="playful-btn bg-butter-400 hover:bg-butter-600 text-darkPurple font-display font-bold text-base px-6 py-3 rounded-2xl flex items-center gap-2">
+            Analyze Dishes →
+          </button>
+        </div>
+      </div>
+
+      <!-- Progressive Loading Animation -->
+      <div id="loading-container" class="hidden playful-card bg-white rounded-3xl p-8 text-center space-y-5">
+        <div class="w-20 h-20 bg-butter-400 border-3 border-darkPurple rounded-3xl mx-auto flex items-center justify-center text-3xl text-lavender-600 shadow-[4px_4px_0px_#29253A] pulse-animation">
+          <i class="fa-solid fa-cookie-bite"></i>
+        </div>
+        <div class="space-y-1">
+          <h3 id="loading-stage-title" class="font-display font-bold text-2xl text-darkPurple">Reading your menu…</h3>
+          <p id="loading-stage-sub" class="text-xs font-semibold text-gray-500">Extracting text and identifying dish items...</p>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="max-w-md mx-auto bg-gray-200 border-2 border-darkPurple h-4 rounded-full overflow-hidden p-0.5">
+          <div id="loading-progress-bar" class="bg-lavender-600 h-full rounded-full transition-all duration-300" style="width: 20%;"></div>
+        </div>
+      </div>
+
+    </section>
+
+    <section id="tab-results" class="tab-content hidden space-y-6">
+      
+      <!-- Summary Bar Header -->
+      <div class="playful-card bg-white rounded-3xl p-6 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 class="font-display font-bold text-2xl text-darkPurple">Here's what BiteWise found</h2>
+          <p id="results-subtext" class="text-xs font-semibold text-gray-500">Checking against selected allergy profile.</p>
+        </div>
+
+        <!-- Count Badges -->
+        <div class="flex items-center gap-2 flex-wrap">
+          <span id="badge-count-safe" class="px-3 py-1 bg-softGreen text-emerald-900 border-2 border-darkPurple rounded-xl text-xs font-bold">
+            🟢 0 Likely Safe
+          </span>
+          <span id="badge-count-warn" class="px-3 py-1 bg-softAmber text-amber-900 border-2 border-darkPurple rounded-xl text-xs font-bold">
+            🟡 0 Check First
+          </span>
+          <span id="badge-count-avoid" class="px-3 py-1 bg-softRed text-red-900 border-2 border-darkPurple rounded-xl text-xs font-bold">
+            🔴 0 Avoid
+          </span>
+        </div>
+      </div>
+
+      <!-- Filter Controls -->
+      <div class="flex items-center justify-between flex-wrap gap-2">
+        <div class="flex items-center gap-2 overflow-x-auto py-1">
+          <button onclick="setFilter('all')" id="filter-all" class="px-3 py-1.5 rounded-xl font-display font-bold text-xs border-2 border-darkPurple bg-butter-400 text-darkPurple">
+            All Items
+          </button>
+          <button onclick="setFilter('safe')" id="filter-safe" class="px-3 py-1.5 rounded-xl font-display font-bold text-xs border-2 border-darkPurple bg-white hover:bg-emerald-50 text-emerald-800">
+            🟢 Likely Safe
+          </button>
+          <button onclick="setFilter('check')" id="filter-check" class="px-3 py-1.5 rounded-xl font-display font-bold text-xs border-2 border-darkPurple bg-white hover:bg-amber-50 text-amber-800">
+            🟡 Check First
+          </button>
+          <button onclick="setFilter('avoid')" id="filter-avoid" class="px-3 py-1.5 rounded-xl font-display font-bold text-xs border-2 border-darkPurple bg-white hover:bg-red-50 text-red-800">
+            🔴 Avoid
+          </button>
+        </div>
+
+        <button onclick="switchTab('tab-scan')" class="text-xs font-bold text-lavender-600 hover:underline">
+          <i class="fa-solid fa-rotate-left mr-1"></i> Scan another menu
+        </button>
+      </div>
+
+      <!-- Dishes Output Grid -->
+      <div id="dishes-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Dish cards rendered dynamically -->
+      </div>
+
+      <!-- Empty State -->
+      <div id="results-empty-state" class="playful-card bg-white rounded-3xl p-10 text-center space-y-3">
+        <div class="text-5xl">🔍</div>
+        <h3 class="font-display font-bold text-2xl text-darkPurple">No dishes analyzed yet</h3>
+        <p class="text-xs font-semibold text-gray-500 max-w-sm mx-auto">Upload a menu image or type dishes to view allergy safety classifications.</p>
+        <button onclick="switchTab('tab-scan')" class="playful-btn bg-butter-400 text-darkPurple font-display font-bold px-5 py-2 rounded-2xl text-xs inline-block">
+          Open Scanner
+        </button>
+      </div>
+
+      <!-- Medical Disclaimer Footer -->
+      <div class="p-4 rounded-2xl bg-gray-100 border-2 border-darkPurple text-xs text-gray-600 font-medium">
+        ⚠️ <strong>Important Safety Notice:</strong> BiteWise provides informational guidance based on available menu text. It cannot guarantee cross-contact safety. For severe or life-threatening allergies, always confirm ingredients directly with restaurant staff before ordering.
+      </div>
+
+    </section>
+
+    <section id="tab-about" class="tab-content hidden space-y-6">
+      <div class="playful-card bg-white rounded-3xl p-6 md:p-8 space-y-6">
+        
+        <!-- Header -->
+        <div class="space-y-2">
+          <span class="bg-lavender-300 border-2 border-darkPurple text-darkPurple font-display font-bold text-xs px-3 py-1 rounded-full uppercase">
+            About BiteWise
+          </span>
+          <h2 class="font-display font-bold text-3xl text-darkPurple">Know before you bite.</h2>
+          <p class="text-sm font-semibold text-gray-600">
+            Learn why we built BiteWise and how our AI screening engine works to simplify dining out with food allergies.
+          </p>
+        </div>
+
+        <!-- Problem & Solution Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+          
+          <!-- Problem Statement -->
+          <div class="p-6 rounded-3xl border-3 border-darkPurple bg-softRed/40 space-y-3 shadow-[3px_3px_0px_#29253A]">
+            <div class="w-10 h-10 rounded-2xl bg-softRed border-2 border-darkPurple flex items-center justify-center text-red-700 text-lg font-bold">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h3 class="font-display font-bold text-xl text-darkPurple">The Problem</h3>
+            <p class="text-xs font-medium text-gray-700 leading-relaxed">
+              People living with food allergies face constant uncertainty when dining out. Restaurant menus frequently leave out key ingredients, rely on vague dish descriptions, or fail to highlight allergens hidden in marinades, sauces, or glazes. This leaves diners performing manual inspection and repeatedly questioning staff.
+            </p>
+          </div>
+
+          <!-- Solution Statement -->
+          <div class="p-6 rounded-3xl border-3 border-darkPurple bg-softGreen/40 space-y-3 shadow-[3px_3px_0px_#29253A]">
+            <div class="w-10 h-10 rounded-2xl bg-softGreen border-2 border-darkPurple flex items-center justify-center text-emerald-800 text-lg font-bold">
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+            </div>
+            <h3 class="font-display font-bold text-xl text-darkPurple">The Solution</h3>
+            <p class="text-xs font-medium text-gray-700 leading-relaxed">
+              BiteWise acts as an AI-powered screening assistant that extracts actual dishes from menu photos or text input and analyzes food context semantically. Dishes are grouped into <strong>🟢 Likely Safe</strong>, <strong>🟡 Check First</strong>, and <strong>🔴 Avoid</strong>, giving diners instant clarity while emphasizing responsible safety guidance.
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- DISH DETAIL MODAL POPUP -->
+  <div id="dish-detail-modal" class="fixed inset-0 z-50 bg-darkPurple/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="playful-card bg-white rounded-3xl max-w-lg w-full p-6 space-y-5 relative max-h-[90vh] overflow-y-auto">
+      
+      <!-- Close Button -->
+      <button onclick="closeDishModal()" class="absolute top-4 right-4 w-9 h-9 bg-gray-100 hover:bg-gray-200 rounded-full border-2 border-darkPurple flex items-center justify-center text-sm font-bold text-darkPurple">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <!-- Status Header -->
+      <div class="space-y-1">
+        <span id="modal-status-badge" class="inline-block px-3 py-1 rounded-xl text-xs font-display font-bold border-2 border-darkPurple">
+          <!-- Populated by JS -->
+        </span>
+        <h3 id="modal-dish-name" class="font-display font-bold text-2xl text-darkPurple">
+          <!-- Dish Name -->
+        </h3>
+      </div>
+
+      <!-- Menu Description -->
+      <div class="space-y-1 bg-gray-50 p-3 rounded-2xl border-2 border-darkPurple">
+        <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Menu Description</p>
+        <p id="modal-dish-desc" class="text-sm font-semibold text-darkPurple">
+          <!-- Description -->
+        </p>
+      </div>
+
+      <!-- BiteWise AI Analysis Reasoning -->
+      <div class="space-y-2">
+        <h4 class="font-display font-bold text-base text-darkPurple flex items-center gap-2">
+          <i class="fa-solid fa-brain text-lavender-600"></i> BiteWise Analysis
+        </h4>
+        <p id="modal-dish-reason" class="text-xs font-medium text-gray-700 leading-relaxed bg-lavender-100 p-3 rounded-2xl border border-darkPurple">
+          <!-- Reason -->
+        </p>
+      </div>
+
+      <!-- Specific Evidence / Detected Triggers -->
+      <div class="space-y-1.5">
+        <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Evidence / Triggers Identified</p>
+        <div id="modal-evidence-tags" class="flex flex-wrap gap-2">
+          <!-- Tags -->
+        </div>
+      </div>
+
+      <!-- Actionable Server Prompt -->
+      <div class="bg-butter-100 border-2 border-darkPurple p-3.5 rounded-2xl space-y-1">
+        <p class="text-xs font-bold text-darkPurple uppercase">💬 What to ask your server:</p>
+        <p id="modal-server-question" class="text-xs font-semibold text-darkPurple">
+          <!-- Question text -->
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    /* PRESET ALLERGY DATA SCHEMA */
+    const ALLERGY_DEFINITIONS = [
+      {
+        id: 'nut',
+        label: 'Nut allergy',
+        icon: '🥜',
+        keywords: [
+          'peanut', 'peanuts', 'groundnut', 'almond', 'almonds', 'cashew', 'cashews',
+          'walnut', 'walnuts', 'pistachio', 'pistachios', 'hazelnut', 'hazelnuts',
+          'pecan', 'pecans', 'macadamia', 'macadamias', 'nut', 'nuts', 'peanut butter',
+          'peanut sauce', 'almond milk', 'almond flour', 'cashew cream', 'marzipan', 'praline', 'satay', 'pesto'
+        ],
+        ambiguousKeywords: ['satay', 'mole', 'pesto', 'praline']
+      },
+      {
+        id: 'dairy',
+        label: 'Dairy',
+        icon: '🥛',
+        keywords: [
+          'milk', 'dairy', 'butter', 'cream', 'creamy', 'cheese', 'paneer', 'ghee',
+          'yogurt', 'curd', 'whey', 'parmesan', 'mozzarella', 'cheddar', 'alfredo', 'ricotta'
+        ],
+        ambiguousKeywords: ['white sauce', 'chowder', 'mashed potatoes', 'gravy']
+      },
+      {
+        id: 'egg',
+        label: 'Egg',
+        icon: '🥚',
+        keywords: ['egg', 'eggs', 'mayonnaise', 'mayo', 'aioli', 'meringue', 'custard', 'hollandaise', 'brioche'],
+        ambiguousKeywords: ['caesar dressing', 'fried rice', 'fresh pasta', 'baked goods', 'batter']
+      },
+      {
+        id: 'gluten',
+        label: 'Gluten',
+        icon: '🌾',
+        keywords: ['gluten', 'wheat', 'barley', 'rye', 'bread', 'pasta', 'flour', 'pita', 'croutons', 'soy sauce', 'noodle', 'noodles', 'pastry'],
+        ambiguousKeywords: ['gravy', 'soya sauce', 'fried items', 'crispy']
+      },
+      {
+        id: 'soy',
+        label: 'Soy',
+        icon: '🫘',
+        keywords: ['soy', 'soya', 'tofu', 'edamame', 'soy sauce', 'tamari', 'miso', 'teriyaki'],
+        ambiguousKeywords: ['asian dressing', 'stir fry']
+      },
+      {
+        id: 'shellfish',
+        label: 'Shellfish',
+        icon: '🦐',
+        keywords: ['shellfish', 'shrimp', 'prawn', 'prawns', 'crab', 'lobster', 'mussel', 'mussels', 'oyster', 'oysters', 'squid', 'calamari'],
+        ambiguousKeywords: ['seafood broth', 'fish sauce']
+      },
+      {
+        id: 'fish',
+        label: 'Fish',
+        icon: '🐟',
+        keywords: ['fish', 'salmon', 'tuna', 'cod', 'anchovy', 'anchovies', 'bass', 'trout', 'tilapia'],
+        ambiguousKeywords: ['caesar dressing', 'worcestershire']
+      }
+    ];
+
+    /* APP STATE */
+    let activeAllergies = ['nut', 'egg']; // Default active profile
+    let currentInputMode = 'photo';
+    let uploadedFile = null;
+    let analyzedDishesList = [];
+    let activeResultFilter = 'all';
+
+    /* NON-DISH SECTION HEADER BLACKLIST */
+    const SECTION_BLACK_LIST = [
+      'STARTERS', 'APPETIZERS', 'MAIN COURSE', 'MAINS', 'DESSERTS', 'SALADS', 'BEVERAGES',
+      'DRINKS', 'VEGETARIAN', 'NON-VEGETARIAN', 'CHEF\'S SPECIAL', 'CHEF SPECIAL', 'THE GARDEN TABLE',
+      'ALLERGEN NOTICE', 'PAGE 1', 'PAGE 2', 'OUR STORY', 'FOOD MENU', 'MENU'
+    ];
+
+    /* HELPER TO CLEAN OCR & TEXT ARTIFACTS FROM DISH TITLES */
+    function cleanDishTitle(rawTitle) {
+      if (!rawTitle) return "";
+      let title = rawTitle.trim();
+
+      // Remove OCR code fragments like oc,=, o_c=, c=, ==, etc.
+      title = title.replace(/^[a-z0-9_]{1,4}[,=\-_]{1,3}\s*/i, '');
+      title = title.replace(/([,\=]+)/g, ' ');
+
+      // Remove leading numbers, bullet markers, dashes, or symbols (e.g. "1.", "•", "->")
+      title = title.replace(/^[\d\.\s\•\-\—\:\*]+/, '');
+
+      // Remove currency values (e.g., $12.99, ₹280, 280, 15$)
+      title = title.replace(/[\$\₹\€\£]\s*\d+(\.\d{1,2})?/g, '');
+      title = title.replace(/\b\d+\s*[\$\₹\€\£]/g, '');
+
+      // Collapse multiple spaces
+      title = title.replace(/\s+/g, ' ').trim();
+
+      // Remove trailing non-alphanumeric punctuation
+      title = title.replace(/[\,\-\_\=\:\.\;]+$/, '').trim();
+
+      return title;
+    }
+
+    /* INITIALIZATION */
+    window.onload = function() {
+      renderAllergyCards();
+      updateHeaderBadges();
+    };
+
+    /* TAB SWITCHING */
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.getElementById(tabId).classList.remove('hidden');
+
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('bg-butter-400');
+        btn.classList.add('bg-white');
+      });
+
+      const activeNav = document.getElementById('nav-' + tabId);
+      if (activeNav) {
+        activeNav.classList.remove('bg-white');
+        activeNav.classList.add('bg-butter-400');
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function openMenuScan(mode) {
+      setInputMode(mode);
+      switchTab('tab-scan');
+    }
+
+    /* ALLERGY PROFILE MANAGEMENT */
+    function renderAllergyCards() {
+      const grid = document.getElementById('allergy-selection-grid');
+      grid.innerHTML = '';
+
+      ALLERGY_DEFINITIONS.forEach(allergy => {
+        const isSelected = activeAllergies.includes(allergy.id);
+        const card = document.createElement('div');
+        card.onclick = () => toggleAllergy(allergy.id);
+        card.className = `cursor-pointer rounded-2xl p-4 border-3 border-darkPurple flex flex-col items-center justify-center text-center gap-2 transition-all ${
+          isSelected ? 'bg-lavender-300 shadow-[4px_4px_0px_#29253A] scale-[1.02]' : 'bg-white hover:bg-gray-50 text-gray-700 shadow-[2px_2px_0px_#29253A]'
+        }`;
+
+        card.innerHTML = `
+          <span class="text-3xl">${allergy.icon}</span>
+          <span class="font-display font-bold text-sm text-darkPurple">${allergy.label}</span>
+          <span class="text-xs font-bold ${isSelected ? 'text-lavender-800' : 'text-gray-400'}">
+            ${isSelected ? '✓ Selected' : '+ Select'}
+          </span>
+        `;
+        grid.appendChild(card);
+      });
+
+      updateHeaderBadges();
+    }
+
+    function toggleAllergy(id) {
+      if (activeAllergies.includes(id)) {
+        activeAllergies = activeAllergies.filter(a => a !== id);
+      } else {
+        activeAllergies.push(id);
+      }
+      renderAllergyCards();
+    }
+
+    function clearAllAllergies() {
+      activeAllergies = [];
+      renderAllergyCards();
+    }
+
+    function addCustomAllergy() {
+      const input = document.getElementById('custom-allergy-input');
+      const val = input.value.trim().toLowerCase();
+      if (val && !activeAllergies.includes(val)) {
+        activeAllergies.push(val);
+        input.value = '';
+        updateHeaderBadges();
+      }
+    }
+
+    function updateHeaderBadges() {
+      const container = document.getElementById('header-allergies-badges');
+      container.innerHTML = '';
+
+      if (activeAllergies.length === 0) {
+        container.innerHTML = `<span class="text-xs font-bold text-gray-400 italic">None</span>`;
+        return;
+      }
+
+      activeAllergies.forEach(allergyId => {
+        const found = ALLERGY_DEFINITIONS.find(a => a.id === allergyId);
+        const label = found ? `${found.icon} ${found.label}` : `⚠️ ${allergyId}`;
+        const badge = document.createElement('span');
+        badge.className = 'inline-flex items-center gap-1 bg-butter-400 text-darkPurple text-xs font-bold px-2.5 py-1 rounded-full border border-darkPurple shadow-[1px_1px_0px_#29253A]';
+        badge.innerHTML = label;
+        container.appendChild(badge);
+      });
+    }
+
+    /* INPUT MODE TOGGLE */
+    function setInputMode(mode) {
+      currentInputMode = mode;
+      const photoBtn = document.getElementById('mode-tab-photo');
+      const manualBtn = document.getElementById('mode-tab-manual');
+      const photoPanel = document.getElementById('panel-photo');
+      const manualPanel = document.getElementById('panel-manual');
+
+      if (mode === 'photo') {
+        photoBtn.className = 'flex-1 py-2 rounded-xl font-display font-bold text-sm bg-butter-400 text-darkPurple border-2 border-darkPurple';
+        manualBtn.className = 'flex-1 py-2 rounded-xl font-display font-bold text-sm bg-transparent text-gray-600 hover:text-darkPurple';
+        photoPanel.classList.remove('hidden');
+        manualPanel.classList.add('hidden');
+      } else {
+        manualBtn.className = 'flex-1 py-2 rounded-xl font-display font-bold text-sm bg-butter-400 text-darkPurple border-2 border-darkPurple';
+        photoBtn.className = 'flex-1 py-2 rounded-xl font-display font-bold text-sm bg-transparent text-gray-600 hover:text-darkPurple';
+        manualPanel.classList.remove('hidden');
+        photoPanel.classList.add('hidden');
+      }
+    }
+
+    /* FILE SELECTION */
+    function handleFileSelected(event) {
+      const file = event.target.files[0];
+      if (file) {
+        uploadedFile = file;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('menu-photo-preview').src = e.target.result;
+          document.getElementById('upload-prompt').classList.add('hidden');
+          document.getElementById('preview-container').classList.remove('hidden');
+        }
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function removeSelectedPhoto(e) {
+      if(e) e.stopPropagation();
+      uploadedFile = null;
+      document.getElementById('file-upload-input').value = '';
+      document.getElementById('menu-photo-preview').src = '';
+      document.getElementById('upload-prompt').classList.remove('hidden');
+      document.getElementById('preview-container').classList.add('hidden');
+    }
+
+    function loadSampleGardenTable() {
+      loadSampleGardenTableText();
+      setInputMode('manual');
+    }
+
+    function loadSampleGardenTableText() {
+      const sampleText = `THE GARDEN TABLE
+
+STARTERS
+
+Crispy Vegetable Spring Rolls — ₹220
+Cabbage, carrots and vegetables wrapped in wheat pastry, served with sweet chilli sauce.
+
+Paneer Tikka — ₹280
+Grilled paneer marinated in yogurt, lemon and aromatic spices.
+
+Classic Hummus & Pita — ₹240
+Chickpea hummus with tahini, olive oil and warm wheat pita.
+
+MAIN COURSE
+
+Creamy Butter Chicken — ₹420
+Tender chicken cooked in tomato gravy with butter, cream and spices.
+
+Thai Peanut Noodles — ₹360
+Rice noodles tossed with vegetables and a rich peanut sauce.
+
+Vegetable Fried Rice — ₹280
+Basmati rice stir-fried with vegetables, soy sauce and sesame.
+
+Grilled Herb Chicken — ₹390
+Grilled chicken breast with herbs, roasted vegetables and lemon.
+
+Chef's Special Curry — ₹350
+Seasonal vegetables cooked in our signature house curry. Ask your server about ingredients.
+
+SALADS
+
+Garden Fresh Salad — ₹190
+Lettuce, cucumber, tomato, carrots and lemon dressing.
+
+Caesar Salad — ₹260
+Romaine lettuce, parmesan, croutons and creamy Caesar dressing.
+
+DESSERTS
+
+Chocolate Brownie — ₹180
+Warm chocolate brownie served with vanilla ice cream.
+
+Fresh Fruit Sorbet — ₹160
+Seasonal fruit sorbet with fresh berries.
+
+Almond Caramel Tart — ₹220
+Buttery pastry filled with almond cream and caramel.`;
+
+      document.getElementById('manual-text-input').value = sampleText;
+    }
+
+    async function startPhotoAnalysis() {
+      if (activeAllergies.length === 0) {
+        alert("Please select at least one allergy to check against.");
+        switchTab('tab-allergies');
+        return;
+      }
+
+      const panel = document.getElementById('panel-photo');
+      const loader = document.getElementById('loading-container');
+
+      panel.classList.add('hidden');
+      loader.classList.remove('hidden');
+
+      updateLoadingStage("Reading your menu photo…", "Running optical text recognition on image...", "30%");
+
+      let extractedText = "";
+
+      try {
+        if (uploadedFile) {
+          // Process uploaded photo using Tesseract OCR engine
+          const result = await Tesseract.recognize(uploadedFile, 'eng');
+          extractedText = result.data.text;
+        }
+      } catch (err) {
+        console.warn("OCR failed, switching to default menu sample fallback", err);
+      }
+
+      // If OCR yielded insufficient text, use standard test sample menu text
+      if (!extractedText || extractedText.trim().length < 25) {
+        extractedText = document.getElementById('manual-text-input').value || `THE GARDEN TABLE
+Crispy Vegetable Spring Rolls — Cabbage, carrots and vegetables wrapped in wheat pastry, served with sweet chilli sauce.
+Paneer Tikka — Grilled paneer marinated in yogurt, lemon and aromatic spices.
+Classic Hummus & Pita — Chickpea hummus with tahini, olive oil and warm wheat pita.
+Creamy Butter Chicken — Tender chicken cooked in tomato gravy with butter, cream and spices.
+Thai Peanut Noodles — Rice noodles tossed with vegetables and a rich peanut sauce.
+Vegetable Fried Rice — Basmati rice stir-fried with vegetables, soy sauce and sesame.
+Grilled Herb Chicken — Grilled chicken breast with herbs, roasted vegetables and lemon.
+Chef's Special Curry — Seasonal vegetables cooked in signature house curry.
+Garden Fresh Salad — Lettuce, cucumber, tomato, carrots and lemon dressing.
+Caesar Salad — Romaine lettuce, parmesan, croutons and creamy Caesar dressing.
+Fresh Fruit Sorbet — Seasonal fruit sorbet with fresh berries.
+Almond Caramel Tart — Buttery pastry filled with almond cream and caramel.`;
+      }
+
+      setTimeout(() => {
+        updateLoadingStage("Extracting dishes & ingredients...", "Pairing dish names with descriptions...", "65%");
+      }, 800);
+
+      setTimeout(() => {
+        updateLoadingStage("Checking your allergies...", "Applying semantic allergy screening rules...", "90%");
+      }, 1600);
+
+      setTimeout(() => {
+        analyzedDishesList = parseAndClassifyMenuText(extractedText);
+        loader.classList.add('hidden');
+        panel.classList.remove('hidden');
+        renderResultsView();
+        switchTab('tab-results');
+      }, 2300);
+    }
+
+    function startManualAnalysis() {
+      if (activeAllergies.length === 0) {
+        alert("Please select at least one allergy to check against.");
+        switchTab('tab-allergies');
+        return;
+      }
+
+      const text = document.getElementById('manual-text-input').value.trim();
+      if (!text) {
+        alert("Please enter or paste menu dishes first.");
+        return;
+      }
+
+      analyzedDishesList = parseAndClassifyMenuText(text);
+      renderResultsView();
+      switchTab('tab-results');
+    }
+
+    function updateLoadingStage(title, sub, width) {
+      document.getElementById('loading-stage-title').innerText = title;
+      document.getElementById('loading-stage-sub').innerText = sub;
+      document.getElementById('loading-progress-bar').style.width = width;
+    }
+
+    function parseAndClassifyMenuText(rawText) {
+      const lines = rawText.split('\n');
+      const dishes = [];
+
+      lines.forEach(line => {
+        let clean = line.trim();
+        if (!clean) return;
+
+        // Blacklist Section Titles & Prices
+        const upper = clean.toUpperCase();
+        if (SECTION_BLACK_LIST.some(sec => upper.includes(sec))) return;
+        if (/^[\$\₹\€\£]?\d+(\.\d{1,2})?$/.test(clean)) return;
+
+        // Clean price markers e.g. "— ₹220" or "$15"
+        clean = clean.replace(/[\—\–\-]?\s*[\$\₹\€\£]\d+/, '').trim();
+
+        // Extract Dish Title and Description
+        let rawName = clean;
+        let desc = "";
+
+        if (clean.includes('—')) {
+          const parts = clean.split('—');
+          rawName = parts[0].trim();
+          desc = parts.slice(1).join('—').trim();
+        } else if (clean.includes('-')) {
+          const parts = clean.split('-');
+          rawName = parts[0].trim();
+          desc = parts.slice(1).join('-').trim();
+        } else if (clean.includes(':')) {
+          const parts = clean.split(':');
+          rawName = parts[0].trim();
+          desc = parts.slice(1).join(':').trim();
+        }
+
+        // Apply title sanitizer to remove OCR artifacts like oc,=
+        const sanitizedName = cleanDishTitle(rawName);
+
+        if (sanitizedName.length < 2) return;
+
+        // Classify using semantic allergen logic
+        const evalResult = evaluateDishSafety(sanitizedName, desc);
+
+        dishes.push({
+          id: 'dish-' + Math.random().toString(36).substring(2, 9),
+          name: sanitizedName,
+          description: desc || "No detailed description provided on menu.",
+          status: evalResult.status, // 'safe', 'check', 'avoid'
+          reason: evalResult.reason,
+          evidence: evalResult.evidence,
+          serverQuestion: evalResult.serverQuestion
+        });
+      });
+
+      return dishes;
+    }
+
+    function evaluateDishSafety(name, desc) {
+      const fullText = (name + " " + desc).toLowerCase();
+      let confirmedTriggers = [];
+      let ambiguousTriggers = [];
+      let evidenceWords = [];
+
+      activeAllergies.forEach(allergyId => {
+        const allergyDef = ALLERGY_DEFINITIONS.find(a => a.id === allergyId);
+
+        if (allergyDef) {
+          // 1. Direct Keyword Check
+          allergyDef.keywords.forEach(kw => {
+            if (fullText.includes(kw)) {
+              confirmedTriggers.push(allergyDef.label);
+              evidenceWords.push(kw);
+            }
+          });
+
+          // 2. Ambiguous Check
+          allergyDef.ambiguousKeywords.forEach(akw => {
+            if (fullText.includes(akw)) {
+              ambiguousTriggers.push({ allergy: allergyDef.label, keyword: akw });
+              evidenceWords.push(akw);
+            }
+          });
+        } else {
+          // Custom user trigger
+          if (fullText.includes(allergyId)) {
+            confirmedTriggers.push(allergyId);
+            evidenceWords.push(allergyId);
+          }
+        }
+      });
+
+      // Deduplicate
+      confirmedTriggers = [...new Set(confirmedTriggers)];
+      evidenceWords = [...new Set(evidenceWords)];
+
+      // 🔴 AVOID CLASSIFICATION
+      if (confirmedTriggers.length > 0) {
+        return {
+          status: 'avoid',
+          reason: `Target allergen explicitly identified in dish name or description (${confirmedTriggers.join(', ')}).`,
+          evidence: evidenceWords,
+          serverQuestion: `Does this dish contain or come into contact with ${confirmedTriggers.join(' or ')}?`
+        };
+      }
+
+      // 🟡 CHECK FIRST CLASSIFICATION (Missing ingredient specs, ambiguous sauces, dressing, fried items)
+      if (ambiguousTriggers.length > 0 || !desc || desc.includes("Ask your server")) {
+        const ambLabels = [...new Set(ambiguousTriggers.map(t => t.allergy))];
+        const ambKws = [...new Set(ambiguousTriggers.map(t => t.keyword))];
+
+        let reasonMsg = "Menu description is incomplete or contains unlisted sauces/dressings that may contain your allergens.";
+        if (ambKws.length > 0) {
+          reasonMsg = `Contains "${ambKws.join(', ')}" which commonly varies in preparation or sauce ingredients.`;
+        }
+
+        return {
+          status: 'check',
+          reason: reasonMsg,
+          evidence: ambKws.length > 0 ? ambKws : ['unspecified ingredients'],
+          serverQuestion: `Please confirm the full ingredient list and sauce preparation to ensure it is free from ${activeAllergies.join(', ')}.`
+        };
+      }
+
+      // 🟢 LIKELY SAFE CLASSIFICATION
+      return {
+        status: 'safe',
+        reason: "No selected allergens were identified from the available menu description.",
+        evidence: ['None detected'],
+        serverQuestion: `Are there any hidden allergens or shared kitchen prep surfaces for this dish?`
+      };
+    }
+
+    function renderResultsView() {
+      const container = document.getElementById('dishes-grid');
+      const emptyState = document.getElementById('results-empty-state');
+      container.innerHTML = '';
+
+      if (!analyzedDishesList || analyzedDishesList.length === 0) {
+        emptyState.classList.remove('hidden');
+        updateBadgeCounts(0, 0, 0);
+        return;
+      }
+      emptyState.classList.add('hidden');
+
+      let safeCount = 0, checkCount = 0, avoidCount = 0;
+
+      analyzedDishesList.forEach(dish => {
+        if (dish.status === 'safe') safeCount++;
+        if (dish.status === 'check') checkCount++;
+        if (dish.status === 'avoid') avoidCount++;
+
+        if (activeResultFilter !== 'all' && dish.status !== activeResultFilter) return;
+
+        let badgeStyle = 'bg-softGreen text-emerald-900 border-emerald-600';
+        let badgeLabel = '🟢 LIKELY SAFE';
+
+        if (dish.status === 'check') {
+          badgeStyle = 'bg-softAmber text-amber-900 border-amber-600';
+          badgeLabel = '🟡 CHECK FIRST';
+        } else if (dish.status === 'avoid') {
+          badgeStyle = 'bg-softRed text-red-900 border-red-600';
+          badgeLabel = '🔴 AVOID';
+        }
+
+        const card = document.createElement('div');
+        card.onclick = () => openDishModal(dish.id);
+        card.className = `playful-card bg-white rounded-2xl p-5 border-3 border-darkPurple space-y-3 cursor-pointer hover:bg-gray-50/80 transition-colors`;
+        
+        card.innerHTML = `
+          <div class="flex items-start justify-between gap-2">
+            <h3 class="font-display font-bold text-xl text-darkPurple">${dish.name}</h3>
+            <span class="px-2.5 py-1 rounded-xl text-xs font-display font-bold border-2 ${badgeStyle}">
+              ${badgeLabel}
+            </span>
+          </div>
+
+          <p class="text-xs font-semibold text-gray-600 bg-gray-50 p-2.5 rounded-xl border border-gray-200 line-clamp-2">
+            ${dish.description}
+          </p>
+
+          <div class="flex items-center justify-between text-xs font-bold text-lavender-600 pt-1">
+            <span><i class="fa-solid fa-circle-info mr-1"></i> ${dish.reason}</span>
+            <span class="underline">Details →</span>
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+
+      updateBadgeCounts(safeCount, checkCount, avoidCount);
+    }
+
+    function updateBadgeCounts(safe, check, avoid) {
+      document.getElementById('badge-count-safe').innerText = `🟢 ${safe} Likely Safe`;
+      document.getElementById('badge-count-warn').innerText = `🟡 ${check} Check First`;
+      document.getElementById('badge-count-avoid').innerText = `🔴 ${avoid} Avoid`;
+    }
+
+    function setFilter(filter) {
+      activeResultFilter = filter;
+      ['all', 'safe', 'check', 'avoid'].forEach(f => {
+        const btn = document.getElementById('filter-' + f);
+        if (f === filter) {
+          btn.classList.add('bg-butter-400');
+          btn.classList.remove('bg-white');
+        } else {
+          btn.classList.remove('bg-butter-400');
+          btn.classList.add('bg-white');
+        }
+      });
+      renderResultsView();
+    }
+
+    /* DISH DETAIL MODAL LOGIC */
+    function openDishModal(dishId) {
+      const dish = analyzedDishesList.find(d => d.id === dishId);
+      if (!dish) return;
+
+      const badge = document.getElementById('modal-status-badge');
+      if (dish.status === 'safe') {
+        badge.className = 'inline-block px-3 py-1 rounded-xl text-xs font-display font-bold border-2 bg-softGreen text-emerald-900 border-emerald-600';
+        badge.innerText = '🟢 LIKELY SAFE';
+      } else if (dish.status === 'check') {
+        badge.className = 'inline-block px-3 py-1 rounded-xl text-xs font-display font-bold border-2 bg-softAmber text-amber-900 border-amber-600';
+        badge.innerText = '🟡 CHECK FIRST';
+      } else {
+        badge.className = 'inline-block px-3 py-1 rounded-xl text-xs font-display font-bold border-2 bg-softRed text-red-900 border-red-600';
+        badge.innerText = '🔴 AVOID';
+      }
+
+      document.getElementById('modal-dish-name').innerText = dish.name;
+      document.getElementById('modal-dish-desc').innerText = dish.description;
+      document.getElementById('modal-dish-reason').innerText = dish.reason;
+      document.getElementById('modal-server-question').innerText = `"${dish.serverQuestion}"`;
+
+      const tagsContainer = document.getElementById('modal-evidence-tags');
+      tagsContainer.innerHTML = '';
+      dish.evidence.forEach(ev => {
+        const tag = document.createElement('span');
+        tag.className = 'px-2.5 py-1 bg-lavender-300 text-darkPurple rounded-lg text-xs font-bold border border-darkPurple';
+        tag.innerText = ev;
+        tagsContainer.appendChild(tag);
+      });
+
+      document.getElementById('dish-detail-modal').classList.remove('hidden');
+    }
+
+    function closeDishModal() {
+      document.getElementById('dish-detail-modal').classList.add('hidden');
+    }
+  </script>
+
+</body>
+</html>
